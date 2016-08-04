@@ -71,3 +71,6 @@ app.put("/items/:id", jsonParser, function(request, response) {
 });
 
 app.listen(8000);
+
+exports.app = app;
+exports.storage = storage;
