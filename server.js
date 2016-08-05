@@ -8,7 +8,7 @@ var Storage = function() {
 };
 
 Storage.prototype.add = function(name) {
-  var item = {name: name, id: this.id};
+  var item = { name: name, id: this.id };
 
   this.items.push(item);
   this.id += 1;
@@ -16,14 +16,29 @@ Storage.prototype.add = function(name) {
   return item;
 };
 
+Storage.prototype.edit = function(id, name) {
+  var item = null;
+
+  for (var i = 0; i < this.items.length; i++) {
+    item = this.items[i];
+
+    if (item.id == id) {
+      item.name = name;
+      return item;
+    }
+  }
+};
+
 Storage.prototype.delete = function(id) {
-  var oldLength = this.items.length;
+  var item = null;
 
-  this.items = this.items.filter(function(item) {
-    return item.id != id;
-  });
+  for (var i = 0; i < this.items.length; i++) {
+    item = this.items[i];
 
-  return this.items.length === (oldLength - 1);
+    if (item.id == id) {
+      return this.items.splice(i, 1);
+    }
+  }
 };
 
 var storage = new Storage();
@@ -51,23 +66,27 @@ app.post("/items", jsonParser, function(request, response) {
 });
 
 app.delete("/items/:id", jsonParser, function(request, response) {
-  if (!request.body) {
-    return response.status(400).json("Invalid body");
+  var item = storage.delete(request.params.id);
+
+  if (!item) {
+    return response.sendStatus(404);
   }
 
-  var success = storage.delete(request.params.id);
-
-  if (success) {
-    response.status(200).json(storage.items);
-  }
-  else {
-    response.status(404).json("Invalid ID");
-  }
+  response.status(200).json(item);
 });
 
-// TODO
-app.put("/items/:id", jsonParser, function(request, response) {
+app.put('/items/:id', jsonParser, function(request, response) {
+  if (!request.body) {
+    return response.sendStatus(400);
+  }
 
+  var item = storage.edit(request.params.id, request.body.name);
+
+  if (!item) {
+    return response.sendStatus(404);
+  }
+
+  response.status(200).json(item);
 });
 
 app.listen(8000);
